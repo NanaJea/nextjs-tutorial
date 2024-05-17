@@ -67,3 +67,6 @@ export const generatePagination = (currentPage: number, totalPages: number) => {
     totalPages,
   ];
 };
+
+// Ajoutez le nouveau code ci-dessous
+// ...
