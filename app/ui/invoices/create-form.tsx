@@ -1,14 +1,24 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import React from 'react';
+import { useFormState } from './useFormState'; // Ensure the correct path
 import { createInvoice } from '@/app/lib/actions';
 
-const CreateInvoiceForm = ({ customers }) => {
+type Customer = {
+  id: string;
+  name: string;
+};
+
+interface CreateInvoiceFormProps {
+  customers: Customer[];
+}
+
+const CreateInvoiceForm: React.FC<CreateInvoiceFormProps> = ({ customers }) => {
   const initialState = { message: null, errors: {} };
   const [state, dispatch] = useFormState(createInvoice, initialState);
 
   return (
-    <form action={dispatch}>
+    <form onSubmit={dispatch}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         <div className="mb-4">
           <label htmlFor="customer" className="mb-2 block text-sm font-medium">
@@ -25,7 +35,7 @@ const CreateInvoiceForm = ({ customers }) => {
               <option value="" disabled>
                 Select a customer
               </option>
-              {customers.map((customer) => (
+              {customers.map((customer: Customer) => (
                 <option key={customer.id} value={customer.id}>
                   {customer.name}
                 </option>

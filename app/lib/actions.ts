@@ -1,4 +1,7 @@
-import { signIn } from 'next-auth/react'; // Ensure you have next-auth/react installed and correctly imported
+"use server";
+
+import { signIn } from '@/auth';
+import { AuthError } from 'next-auth';
 import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 import { redirect } from 'next/navigation'; // Corrected import
@@ -14,7 +17,7 @@ const UpdateInvoice = CreateInvoice.extend({
   id: z.string(),
 });
 
-export type State = {
+type State = {
   errors?: {
     customerId?: string[];
     amount?: string[];
@@ -29,22 +32,10 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
-    const res = await signIn('credentials', {
-      redirect: false,
-      email: formData.get('email'),
-      password: formData.get('password'),
-    });
-
-    if (res?.error) {
-      if (res.error === 'CredentialsSignin') {
-        return 'Invalid credentials.';
-      } else {
-        return 'Something went wrong.';
-      }
-    }
+    await signIn('credentials', formData);
   } catch (error) {
-    if (error instanceof Error) { // Handle the error as an instance of Error
-      switch (error.message) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
         case 'CredentialsSignin':
           return 'Invalid credentials.';
         default:
@@ -85,8 +76,6 @@ export async function createInvoice(prevState: State, formData: FormData) {
     };
   }
 
-  // Use a suitable method to revalidate the path if needed
-  // revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
 
@@ -122,7 +111,19 @@ export async function updateInvoice(
     return { message: 'Database Error: Failed to Update Invoice.' };
   }
 
-  // Use a suitable method to revalidate the path if needed
-  // revalidatePath('/dashboard/invoices');
+  redirect('/dashboard/invoices');
+}
+
+// Delete Invoice Function
+export async function deleteInvoice(id: string) {
+  try {
+    await sql`
+      DELETE FROM invoices
+      WHERE id = ${id}
+    `;
+  } catch (error) {
+    return { message: 'Database Error: Failed to Delete Invoice.' };
+  }
+
   redirect('/dashboard/invoices');
 }
